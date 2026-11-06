@@ -7,7 +7,7 @@ const parsed_data = testdata;
 
 test.describe('create category tests', () => {
     test('create category with image and description', async ({ page }) => {
-        test.setTimeout(0); // من غير حد زمني: الـ OTP + الصفحة تفضل مفتوحة
+        test.setTimeout(0);
 
         const loginPage = new LoginPage(page);
         const createCategoryPage = new CreateCategoryPage(page);
@@ -20,10 +20,55 @@ test.describe('create category tests', () => {
             // استنى لحد ما تكتب الـ OTP بنفسك
             await createCategoryPage.waitForOtp();
 
+            // تسجيل طلبات الشبكة بعد إتمام تسجيل الدخول والـ OTP
+            page.on('response', (response) => {
+                const request = response.request();
+
+                // طباعة طلبات API فقط
+                if (!['xhr', 'fetch'].includes(request.resourceType())) {
+                    return;
+                }
+
+                let sentData: unknown = request.postData();
+
+                try {
+                    sentData = request.postDataJSON();
+                } catch {
+                    // لو البيانات مش JSON، نحتفظ بالنص الأصلي
+                }
+
+                console.log('\n========== API REQUEST ==========');
+                console.log('Method:', request.method());
+                console.log('URL:', request.url());
+                console.log('Status Code:', response.status());
+                console.log(
+                    'Sent Data:',
+                    sentData == null
+                        ? 'No request body'
+                        : typeof sentData === 'string'
+                            ? sentData
+                            : JSON.stringify(sentData, null, 2)
+                );
+                console.log('=================================\n');
+            });
+
+            page.on('requestfailed', (request) => {
+                if (!['xhr', 'fetch'].includes(request.resourceType())) {
+                    return;
+                }
+
+                console.log('\n========== NETWORK ERROR ==========');
+                console.log('Method:', request.method());
+                console.log('URL:', request.url());
+                console.log('Error:', request.failure()?.errorText);
+                console.log('===================================\n');
+            });
+
             await createCategoryPage.createCategory(categoryName);
             await createCategoryPage.expectCategorySaved();
         } finally {
-            await page.pause(); // الصفحة تفضل مفتوحة حتى لو التيست فشل
+            // فتح الـ Inspector وإيقاف التنفيذ للمراجعة
+            await page.pause();
         }
     });
 });

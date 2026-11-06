@@ -1,0 +1,1 @@
+{"statusCode":403,"timestamp":"2026-11-06T20:53:43.603Z","path":"/api/v1/auth/staff/login","message":"{\"requires2FA\":true,\"message\":\"2FA code required\"}"}

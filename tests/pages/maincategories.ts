@@ -5,28 +5,44 @@ export class FormPage {
     readonly page: Page;
 
     //============= locators ==============
-    readonly categoriesMenu: Locator; // مؤشر إن اللوجن + الـ OTP خلصوا
+    readonly categoriesMenu: Locator;
     readonly nameInput: Locator;
     readonly firstOption: Locator;
+    readonly firstCheckbox: Locator;
     readonly submitButton: Locator;
 
     //============= constructor ===========
     constructor(page: Page) {
         this.page = page;
-        this.categoriesMenu = page.locator("//span[normalize-space()='Categories']");
-        this.nameInput = page.locator("//input[@placeholder='Enter name']");
-        // أول عنصر ظاهر بنفس الكلاس (مش أول واحد مخفي في الصفحة)
+
+        this.categoriesMenu = page.locator(
+            "//span[normalize-space()='Categories']"
+        );
+
+        this.nameInput = page.locator(
+            "//input[@placeholder='Enter name']"
+        );
+
         this.firstOption = page
             .locator("//div[@class='flex items-center gap-2 truncate']")
             .filter({ visible: true })
             .first();
-        this.submitButton = page.locator("//button[@type='submit']");
+
+        this.firstCheckbox = page
+            .getByRole('checkbox')
+            .filter({ visible: true })
+            .first();
+
+        this.submitButton = page.locator(
+            "//button[@type='submit']"
+        );
     }
 
     //============= OTP wait ==============
-    // اكتب الـ OTP بنفسك؛ التيست بيكمل أول ما تظهر القايمة الجانبية
     async waitForOtp(timeoutMs = 120_000) {
-        await expect(this.categoriesMenu).toBeVisible({ timeout: timeoutMs });
+        await expect(this.categoriesMenu).toBeVisible({
+            timeout: timeoutMs,
+        });
     }
 
     //============= actions ===============
@@ -39,8 +55,14 @@ export class FormPage {
     }
 
     async selectFirstOption() {
+        // فتح القائمة
         await expect(this.firstOption).toBeVisible();
         await this.firstOption.click();
+
+        // اختيار أول Checkbox ظاهر
+        await expect(this.firstCheckbox).toBeVisible();
+        await this.firstCheckbox.check();
+        await expect(this.firstCheckbox).toBeChecked();
     }
 
     async submit() {
