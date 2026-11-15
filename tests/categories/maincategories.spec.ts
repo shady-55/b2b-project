@@ -1,9 +1,5 @@
 import { test } from '@playwright/test';
-import { LoginPage } from '../pages/loginpage';
 import { FormPage } from '../pages/maincategories';
-import testdata from '../testdata/testdata.json';
-
-const parsed_data = testdata;
 
 const FORM_URL = 'https://admin-dev.justacodes.com/categories/create';
 
@@ -11,16 +7,13 @@ test.describe('form tests', () => {
     test('fill form and submit', async ({ page }) => {
         test.setTimeout(0);
 
-        const loginPage = new LoginPage(page);
         const formPage = new FormPage(page);
         const itemName = `Auto Item ${Date.now()}`;
 
         try {
-            await loginPage.goto();
-            await loginPage.login(parsed_data.email, parsed_data.password);
-
-            // استنى لحد ما تكتب الـ OTP بنفسك
-            await formPage.waitForOtp();
+            // الجلسة جاهزة من auth.setup.ts (من غير login ولا OTP)
+            await page.goto('/');
+            await formPage.waitForOtp(30_000);
 
             // طباعة كل طلبات API بعد خطوة الـ OTP
             page.on('response', (response) => {

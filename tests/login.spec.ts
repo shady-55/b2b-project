@@ -1,8 +1,9 @@
 import { test } from '@playwright/test';
 import { LoginPage } from './pages/loginpage';
-import testdata from './testdata/testdata.json';
+import { credentials } from './testdata/env';
 
-const parsed_data = testdata;
+// التستات دي بتختبر الـ login نفسه، فلازم تبدأ من غير جلسة محفوظة
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('login tests', () => {
     let loginPage: LoginPage;
@@ -12,12 +13,35 @@ test.describe('login tests', () => {
         await loginPage.goto();
     });
 
-    test('valid login', async ({ page }) => {
-        test.setTimeout(0); // من غير حد زمني عشان الصفحة متقفلش
+    test('valid login (type the OTP manually)', async () => {
+        test.setTimeout(180_000); // وقت كفاية تكتب الـ OTP
 
-        await loginPage.login(parsed_data.email, parsed_data.password);
-        //await loginPage.expectLoginSuccess();
+        await loginPage.login(credentials.email, credentials.password);
+        await loginPage.expectLoginSuccess();
+    });
 
-        await page.pause(); // المتصفح يفضل مفتوح لحد ما تدوس Resume أو تقفله
+    test('wrong password', async () => {
+        await loginPage.login(credentials.email, `wrong-${Date.now()}`);
+        await loginPage.expectLoginFailed();
+    });
+
+    test('unregistered email', async () => {
+        await loginPage.login(`not-registered-${Date.now()}@example.com`, credentials.password);
+        await loginPage.expectLoginFailed();
+    });
+
+    test('empty email and password', async () => {
+        await loginPage.login('', '');
+        await loginPage.expectLoginFailed();
+    });
+
+    test('empty password', async () => {
+        await loginPage.login(credentials.email, '');
+        await loginPage.expectLoginFailed();
+    });
+
+    test('invalid email format', async () => {
+        await loginPage.login('not-an-email', credentials.password);
+        await loginPage.expectLoginFailed();
     });
 });

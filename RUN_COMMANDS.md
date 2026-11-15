@@ -70,7 +70,10 @@ npx playwright test tests/products/topupproduct.spec.ts --headed
 ```
 
 ## Product Filters (كل فلتر في ملف لوحده)
-كل ملف بيطلب OTP مرة، فشغّل واحد واحد أو استخدم `--workers=1`.
+الـ OTP بيتطلب مرة واحدة بس في `auth.setup.ts`، والجلسة بتتحفظ في `.auth/user.json` وكل التستات بتستخدمها.
+لو الجلسة انتهت، أول run هيطلب OTP تاني تلقائيًا. ولو عايز تجبره يعمل login من جديد امسح `.auth/user.json`.
+
+> لازم يكون عندك ملف `.env` فيه بيانات الدخول (انسخ `.env.example`).
 ```
 # كل الفلاتر
 npx playwright test tests/products/filters --headed --workers=1

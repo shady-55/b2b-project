@@ -1,7 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
-import { LoginPage } from './loginpage';
 import { AllProductsPage } from './allproductspage';
-import testdata from '../testdata/testdata.json';
+import { AUTH_FILE } from '../testdata/env';
 
 export { expect };
 
@@ -9,23 +8,24 @@ export { expect };
 export const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /**
- * بيعمل login + OTP مرة واحدة لكل ملف، وكل تيست بيبدأ من غير فلاتر.
+ * بيفتح صفحة الـ products بالجلسة المحفوظة مرة واحدة لكل ملف، وكل تيست بيبدأ من غير فلاتر.
  * لازم يتنادى جوه test.describe.
  */
 export function useProductsPage() {
     const ctx = {} as { page: Page; productsPage: AllProductsPage };
 
     test.beforeAll(async ({ browser }) => {
-        test.setTimeout(180_000); // وقت كفاية تكتب الـ OTP
+        test.setTimeout(60_000);
 
-        ctx.page = await browser.newPage();
-        const loginPage = new LoginPage(ctx.page);
+        // browser.newPage مش بياخد إعدادات الـ project لوحده، فبنديله الجلسة والـ baseURL
+        ctx.page = await browser.newPage({
+            storageState: AUTH_FILE,
+            baseURL: test.info().project.use.baseURL,
+        });
         ctx.productsPage = new AllProductsPage(ctx.page);
 
-        await loginPage.goto();
-        await loginPage.login(testdata.email, testdata.password);
-
-        await ctx.productsPage.waitForOtp();
+        await ctx.page.goto('/');
+        await ctx.productsPage.waitForOtp(30_000);
         await ctx.productsPage.openFromMenu();
     });
 
